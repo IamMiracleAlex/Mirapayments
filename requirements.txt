@@ -1,0 +1,12 @@
+asgiref==3.3.4   # django core
+Django==3.2.4   # django core
+pytz==2021.1   # django core
+sqlparse==0.4.1   # django core
+babel==2.9.1    # django money
+django-money==2.0  # django money
+py-moneyed==1.2    # django money
+requests==2.25.1   # requests
+cffi==1.14.5            # knox 
+cryptography==3.4.7         # knox
+djangorestframework==3.12.4   # rest framework
+pycparser==2.20  # knox
