@@ -37,16 +37,20 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.sites',
 
     # third party
     'rest_framework',
-    'knox',
+    'request',
+
 
     # local
     'users',
+    'knox',
+
     # 'accounts',
     # 'transactions',
-    # 'logs'
+    'logs'
 ]
 
 MIDDLEWARE = [
@@ -57,6 +61,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'request.middleware.RequestMiddleware',
 ]
 
 ROOT_URLCONF = 'mirapayments.urls'
@@ -138,30 +143,30 @@ USE_THOUSAND_SEPARATOR = True
 
 AUTH_USER_MODEL = 'users.User'
 
-# LOGGING = {
-#     'version': 1,
-#     'disable_existing_loggers': False,
-#     'formatters': {
-#         'verbose': {
-#             'format': '%(levelname)s %(asctime)s %(module)s %(process)d %(thread)d %(message)s'
-#         },
-#         'simple': {
-#             'format': '%(levelname)s %(asctime)s %(message)s'
-#         },
-#     },
-#     'handlers': {
-#         'db_log': {
-#             'level': 'DEBUG',
-#             'class': 'logs.db_log_handler.DatabaseLogHandler'
-#         },
-#     },
-#     'loggers': {
-#         'db': {
-#             'handlers': ['db_log'],
-#             'level': 'DEBUG'
-#         }
-#     }
-# }
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '%(levelname)s %(asctime)s %(module)s %(process)d %(thread)d %(message)s'
+        },
+        'simple': {
+            'format': '%(levelname)s %(asctime)s %(message)s'
+        },
+    },
+    'handlers': {
+        'db_log': {
+            'level': 'DEBUG',
+            'class': 'logs.db_log_handler.DatabaseLogHandler'
+        },
+    },
+    'loggers': {
+        'db': {
+            'handlers': ['db_log'],
+            'level': 'DEBUG'
+        }
+    }
+}
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
@@ -171,3 +176,9 @@ REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 100,
 }
+
+# Request Log settings
+# REQUEST_IGNORE_IP = ['127.0.0.1',]
+REQUEST_IGNORE_PATHS = (
+    r'^admin/',
+)

@@ -6,7 +6,6 @@ except ImportError:
 
 import binascii
 
-from django.contrib.auth import get_user_model
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 from rest_framework import exceptions
@@ -16,17 +15,19 @@ from rest_framework.authentication import (
 
 from knox.crypto import hash_token
 from knox.models import AuthToken
-from knox.settings import  knox_settings
 from knox.signals import token_expired
 from knox import defaults
 from knox.defaults import CONSTANTS
 
-User = get_user_model()
-
+from users.models import User
 
 class TokenAuthentication(BaseAuthentication):
+    #######
+    ######
     # PROTECTED CLASS: DO NOT MODIFY!!!
-    
+    ######
+    #######
+
     '''
     This authentication scheme uses Knox AuthTokens for authentication.
 
@@ -42,7 +43,7 @@ class TokenAuthentication(BaseAuthentication):
 
     def authenticate(self, request):
         auth = get_authorization_header(request).split()
-        # prefix = knox_settings.AUTH_HEADER_PREFIX.encode()
+        # prefix = defaults.AUTH_HEADER_PREFIX.encode()
         prefix = defaults.AUTH_HEADER_PREFIX.encode()
 
         if not auth or auth[0].lower() != prefix.lower():
@@ -80,7 +81,7 @@ class TokenAuthentication(BaseAuthentication):
                 except (TypeError, binascii.Error):
                     raise exceptions.AuthenticationFailed(msg)
                 if compare_digest(digest, auth_token.digest):
-                    if knox_settings.AUTO_REFRESH and auth_token.expiry:
+                    if defaults.AUTO_REFRESH and auth_token.expiry:
                         self.renew_token(auth_token)
                     return self.validate_user(auth_token, is_live=True)
 
@@ -96,11 +97,11 @@ class TokenAuthentication(BaseAuthentication):
 
     def renew_token(self, auth_token):
         current_expiry = auth_token.expiry
-        new_expiry = timezone.now() + knox_settings.TOKEN_TTL
+        new_expiry = timezone.now() + defaults.TOKEN_TTL
         auth_token.expiry = new_expiry
         # Throttle refreshing of token to avoid db writes
         delta = (new_expiry - current_expiry).total_seconds()
-        if delta > knox_settings.MIN_REFRESH_INTERVAL:
+        if delta > defaults.MIN_REFRESH_INTERVAL:
             auth_token.save(update_fields=('expiry',))
 
     def validate_user(self, auth_token, is_live):
@@ -110,7 +111,7 @@ class TokenAuthentication(BaseAuthentication):
         return (auth_token.user, auth_token, is_live)
 
     def authenticate_header(self, request):
-        return knox_settings.AUTH_HEADER_PREFIX
+        return defaults.AUTH_HEADER_PREFIX
 
     def _cleanup_token(self, auth_token):
         for other_token in auth_token.user.auth_token_set.all():

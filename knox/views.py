@@ -13,7 +13,7 @@ from rest_framework.views import APIView
 
 from knox.auth import TokenAuthentication
 from knox.models import AuthToken
-from knox.settings import knox_settings
+from knox import defaults
 
 
 class BaseLoginView(APIView):
@@ -23,16 +23,16 @@ class BaseLoginView(APIView):
         return {'request': self.request, 'format': self.format_kwarg, 'view': self}
 
     def get_token_ttl(self):
-        return knox_settings.TOKEN_TTL
+        return defaults.TOKEN_TTL
 
     def get_token_limit_per_user(self):
-        return knox_settings.TOKEN_LIMIT_PER_USER
+        return defaults.TOKEN_LIMIT_PER_USER
 
     def get_user_serializer_class(self):
-        return knox_settings.USER_SERIALIZER
+        return defaults.USER_SERIALIZER
 
     def get_expiry_datetime_format(self):
-        return knox_settings.EXPIRY_DATETIME_FORMAT
+        return defaults.EXPIRY_DATETIME_FORMAT
 
     def format_expiry_datetime(self, expiry):
         datetime_format = self.get_expiry_datetime_format()
