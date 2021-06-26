@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/3.2/ref/settings/
 """
 
 from pathlib import Path
+import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -42,7 +43,8 @@ INSTALLED_APPS = [
     # third party
     'rest_framework',
     'request',
-
+    'django_celery_results',
+    'django_celery_beat',
 
     # local
     'users',
@@ -50,7 +52,7 @@ INSTALLED_APPS = [
 
     # 'accounts',
     # 'transactions',
-    'logs'
+    'logs',
 ]
 
 MIDDLEWARE = [
@@ -182,3 +184,18 @@ REST_FRAMEWORK = {
 REQUEST_IGNORE_PATHS = (
     r'^admin/',
 )
+
+
+# Celery settings
+CELERY_BROKER_URL = os.environ.get('CELERY_BROKER_URL', 'amqp://localhost') 
+# CELERY_IMPORTS = (
+#     'annotation.schedules.events_and_unique_urls_status',
+#     'annotation.schedules.update_labelled_urls',
+#     'annotation.schedules.rds_internet_archive',
+#     'classification.schedules.delete_node_permanently',
+#     'custom_logger.schedules.clear_old_logs',
+#     'annotation.schedules.create_snapshots',
+#     'annotation.schedules.process_completed',
+#     'annotation.schedules.create_partial_db_backup.py',
+#     )
+# CELERYBEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"

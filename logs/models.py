@@ -25,3 +25,11 @@ class DatabaseLog(models.Model):
 
     class Meta:
         ordering = ('-create_datetime',)
+
+
+
+class DashboardLog(models.Model):
+    user = models.ForeignKey('users.User', null=True, on_delete=models.SET_NULL)
+    traceback = models.TextField(null=True)
+    meta_info = models.TextField()
+    time = models.DateTimeField(auto_now_add=True)

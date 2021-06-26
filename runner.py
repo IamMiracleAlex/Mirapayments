@@ -11,13 +11,7 @@ django.setup()                                                       #
 ######################################################################
 print("Ready!")
 
-
-from djmoney.money import Money
-
-amount = Money(100, 'NGN')
-
-price = Money(200.025, 'USD')
-
-print(price.round(2))
+from request.models import Request
+print(help(Request))
 
 
