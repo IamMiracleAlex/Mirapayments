@@ -1,6 +1,4 @@
-from cryptography.hazmat import primitives
 from django.contrib.auth.signals import user_logged_in, user_logged_out
-from django.utils import timezone
 from django.contrib.auth import login
 
 from rest_framework.authtoken.serializers import AuthTokenSerializer
@@ -38,19 +36,19 @@ class BaseLoginView(APIView):
         datetime_format = self.get_expiry_datetime_format()
         return DateTimeField(format=datetime_format).to_representation(expiry)
 
-    def get_post_response_data(self, request, token, instance):
+    def get_post_response_data(self, request, instance):
         UserSerializer = self.get_user_serializer_class()
 
         data = {
             'expiry': self.format_expiry_datetime(instance.expiry),
-            'live_token': token,
+            'live_token': instance.live_token,
             'test_token': instance.test_token
         }
-        if UserSerializer is not None:
-            data["user"] = UserSerializer(
-                request.user,
-                context=self.get_context()
-            ).data
+        # if UserSerializer is not None:
+        #     data["user"] = UserSerializer(
+        #         request.user,
+        #         context=self.get_context()
+        #     ).data
         return data
 
     def post(self, request, format=None):
@@ -58,15 +56,16 @@ class BaseLoginView(APIView):
         if token_limit_per_user is not None:
             tokens = request.user.auth_token_set.all()
             if tokens.count() >= token_limit_per_user:
-                return Response(
-                    {"error": "Maximum amount of tokens allowed per user exceeded."},
-                    status=status.HTTP_403_FORBIDDEN
-                )
+                data = self.get_post_response_data(request, tokens.last())
+                user_logged_in.send(sender=request.user.__class__,
+                    request=request, user=request.user)
+                return Response(data)
+
         token_ttl = self.get_token_ttl()
-        instance, token = AuthToken.objects.create(request.user, token_ttl)
+        instance = AuthToken.objects.create(request.user)
         user_logged_in.send(sender=request.user.__class__,
                             request=request, user=request.user)
-        data = self.get_post_response_data(request, token, instance)
+        data = self.get_post_response_data(request, instance)
         return Response(data)
 
 
@@ -96,12 +95,12 @@ class LogoutAllView(APIView):
         return Response(None, status=status.HTTP_204_NO_CONTENT)
 
 
-class LoginView(BaseLoginView):
-    permission_classes = (AllowAny,)
+# class LoginView(BaseLoginView):
+#     permission_classes = (AllowAny,)
 
-    def post(self, request, format=None):
-        serializer = AuthTokenSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        user = serializer.validated_data['user']
-        login(request, user)
-        return super(LoginView, self).post(request, format=None)
+#     def post(self, request, format=None):
+#         serializer = AuthTokenSerializer(data=request.data)
+#         serializer.is_valid(raise_exception=True)
+#         user = serializer.validated_data['user']
+#         login(request, user)
+#         return super(LoginView, self).post(request, format=None)

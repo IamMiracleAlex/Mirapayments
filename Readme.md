@@ -6,7 +6,7 @@
 3.  cd into the root of the django project (i.e the path containing manage.py)
 4.  install requirements `pip install -r requirements.txt`
 5.  Set up your environment variables using any credentials of your choice 
-    or use the available defaults present in config/settings.py
+    or use the available defaults present in mirapayment/settings.py
 6.  Create a local postgres instance (or use an existing one)
 7.  Modiy the database credentials in settings to match yours (mirapayments/settings.py)
 8.  run `python manage.py migrate` to create database tables

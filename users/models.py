@@ -1,31 +1,17 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 
-from utils.tools import generate_unique_key
 from users.managers import CustomUserManager
 
 
 class User(AbstractUser):
     username = None
     email = models.EmailField(unique=True)
-    phone = models.CharField(max_length=15, default='', blank=True)
+    phone = models.CharField(max_length=25, default='', blank=True)
     email_verified = models.BooleanField(default=False)
-    # refer_code = models.CharField(
-    #     max_length=15,
-    #     unique=True,
-    #     editable=False,
-    # )
-    # referer = models.ForeignKey(
-    #     'self', 
-    #     on_delete=models.SET_NULL,
-    #     blank=True,
-    #     null=True,
-    #     related_name='referrals'
-    # )
+    # country = models.CharField(max_length=150, default='nigeria')
     send_notificatioens = models.BooleanField(default=False)
     updated_at = models.DateTimeField(auto_now=True)
-  
-    # is_live = models.models.BooleanField(default=False)
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = []

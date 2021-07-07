@@ -13,6 +13,10 @@ https://docs.djangoproject.com/en/3.2/ref/settings/
 from pathlib import Path
 import os
 
+from dotenv import load_dotenv
+
+load_dotenv()
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -177,6 +181,12 @@ REST_FRAMEWORK = {
     ],
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 100,
+    'DEFAULT_RENDERER_CLASSES': [
+        'helpers.api_response.CustomJSONRenderer',
+    ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated'],
+
 }
 
 # Request Log settings
@@ -189,13 +199,24 @@ REQUEST_IGNORE_PATHS = (
 # Celery settings
 CELERY_BROKER_URL = os.environ.get('CELERY_BROKER_URL', 'amqp://localhost') 
 # CELERY_IMPORTS = (
-#     'annotation.schedules.events_and_unique_urls_status',
-#     'annotation.schedules.update_labelled_urls',
+#     'accounts.schedules.track',
+#     'transactions.schedules.update_labelled_urls',
 #     'annotation.schedules.rds_internet_archive',
-#     'classification.schedules.delete_node_permanently',
-#     'custom_logger.schedules.clear_old_logs',
-#     'annotation.schedules.create_snapshots',
-#     'annotation.schedules.process_completed',
-#     'annotation.schedules.create_partial_db_backup.py',
 #     )
 # CELERYBEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"
+
+
+# Email settings
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+
+# EMAIL_HOST = 'smtp.gmail.com'
+# EMAIL_PORT = 587
+# EMAIL_HOST_USER = config('EMAIL_HOST_USER')
+# EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
+# EMAIL_USE_TLS = True
+# DEFAULT_FROM_EMAIL = 'Westan Homes <westanhomesng@gmail.com>'
+
+# print(os.environ.get('PEACE'))
+# print(config)

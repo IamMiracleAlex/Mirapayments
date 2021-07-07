@@ -72,15 +72,10 @@ class TokenAuthentication(BaseAuthentication):
 
         if token.startswith(defaults.LIVE_KEY_PREFIX):
             token = token.lstrip(defaults.LIVE_KEY_PREFIX)
-            for auth_token in AuthToken.objects.filter(token_key=token[:CONSTANTS.TOKEN_KEY_LENGTH]):
+            for auth_token in AuthToken.objects.filter(live_token=token):
                 # if self._cleanup_token(auth_token):
-                #     continue
-
-                try:
-                    digest = hash_token(token, auth_token.salt)
-                except (TypeError, binascii.Error):
-                    raise exceptions.AuthenticationFailed(msg)
-                if compare_digest(digest, auth_token.digest):
+                #                     continue
+                if compare_digest(token, auth_token.live_token):
                     if defaults.AUTO_REFRESH and auth_token.expiry:
                         self.renew_token(auth_token)
                     return self.validate_user(auth_token, is_live=True)
