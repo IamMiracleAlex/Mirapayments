@@ -126,19 +126,6 @@ class UserSerializer(serializers.ModelSerializer):
         model = User
         fields = ['email', 'password', 'first_name', 'last_name', 'phone', 'country']
 
-    def create(self, validated_data):
-        password = validated_data.pop('password')
-        user = User.objects.create(**validated_data)
-        user.set_password(password)
-        return user
-
-    # def update(self, instance, validated_data):
-    #     # print(validated_data)
-    #     for attr, value in validated_data.items(): 
-    #         setattr(instance, attr, value)      
-    #     instance.save()
-    #     return instance
-
 
 class UserUpdateSerializer(serializers.Serializer):
     first_name = serializers.CharField(required=False)
@@ -153,7 +140,7 @@ class UserUpdateSerializer(serializers.Serializer):
         for attr, value in validated_data.items():
             if not value:
                 value = instance.attr
-                setattr(instance, attr, value) 
+            setattr(instance, attr, value) 
        
         instance.save()
         return instance    

@@ -1,16 +1,21 @@
 from django.test import TestCase
 from django.urls import reverse
-# from django.http import HttpRequest
+from django.contrib.admin.sites import AdminSite
 
 from users.tests.factories import UserFactory
 from users.models import User
+from users import admin
 
 
 class UserAdminTest(TestCase):
 
     def setUp(self):
         self.user = UserFactory(is_staff=True, is_superuser=True)
-        self.client.force_login(self.user) 
+        self.client.force_login(self.user)
+
+        # instantiate adminsite
+        site = AdminSite() 
+        self.user_admin = admin.CustomUserAdmin(User, site)
 
     def test_changelist_view(self):
         '''Assert user change list view loads well'''
@@ -28,11 +33,10 @@ class UserAdminTest(TestCase):
 
 
     def test_export_as_csv(self):
-        '''assert that export_to_csv() works'''
+        '''Assert that export_to_csv() works'''
 
         queryset = UserFactory.create_batch(size=10)
-        # request = HttpRequest()
-
-        result = self.user_admin.export_as_csv(self.request, queryset)
+        
+        result = self.user_admin.export_items_to_csv(self.client.request, queryset)
         #csv is created and returns success status code
         self.assertEqual(result.status_code, 200) 

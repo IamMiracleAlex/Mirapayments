@@ -11,3 +11,4 @@ class UserFactory(factory.django.DjangoModelFactory):
     password = factory.Sequence(lambda n: 'password{}'.format(n))
     is_superuser = False
     is_staff = False
+    email_verified = False

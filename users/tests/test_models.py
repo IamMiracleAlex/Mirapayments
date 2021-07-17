@@ -15,7 +15,7 @@ class UserTest(TestCase):
         self.assertIsNotNone(user.email) 
         self.assertFalse(user.is_superuser) 
         self.assertFalse(user.is_staff) 
-        self.assertIsNone(user.last_name) 
+        self.assertEqual(user.last_name, '') 
 
     # def test_queued(self):
     #     '''Assert that the queued property works'''

@@ -21,13 +21,6 @@ class UserSerializerTest(APITestCase):
         self.assertTrue(user_serializer.is_valid())
 
 
-        # user = user_serializer.save()
-
-        # serializer_data = UserSerializer(instance=user).data
-
-        # self.assertDictEqual(data, serializer_data)
-
-
 class UserUpdateSerializerTest(APITestCase):
 
     def test_user_update_serializer(self):
