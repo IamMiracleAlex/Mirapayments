@@ -132,12 +132,12 @@ class UserSerializer(serializers.ModelSerializer):
         user.set_password(password)
         return user
 
-    def update(self, instance, validated_data):
-        print(validated_data)
-        for attr, value in validated_data.items(): 
-            setattr(instance, attr, value)      
-        instance.save()
-        return instance
+    # def update(self, instance, validated_data):
+    #     # print(validated_data)
+    #     for attr, value in validated_data.items(): 
+    #         setattr(instance, attr, value)      
+    #     instance.save()
+    #     return instance
 
 
 class UserUpdateSerializer(serializers.Serializer):
@@ -150,7 +150,10 @@ class UserUpdateSerializer(serializers.Serializer):
         fields = ['first_name', 'last_name', 'phone', 'country']
 
     def update(self, instance, validated_data):       
-        for attr, value in validated_data.items(): 
-            setattr(instance, attr, value)      
+        for attr, value in validated_data.items():
+            if not value:
+                value = instance.attr
+                setattr(instance, attr, value) 
+       
         instance.save()
         return instance    

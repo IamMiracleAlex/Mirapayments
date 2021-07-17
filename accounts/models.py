@@ -35,7 +35,6 @@ class Account(models.Model):
 
     class Meta:
         unique_together = ('user', 'account_type',)
-        abstract = True
 
     def __str__(self):
         return "{}'s {} account".format(
@@ -131,7 +130,6 @@ class TestAccount(models.Model):
     name = models.CharField(max_length=200)
     class Meta:
         unique_together = ('user', 'account_type',)
-        abstract = True
 
     def __str__(self):
         return "{}'s {} account".format(

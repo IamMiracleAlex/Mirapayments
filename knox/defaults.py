@@ -11,18 +11,18 @@ AUTH_HEADER_PREFIX = 'Token'
 EXPIRY_DATETIME_FORMAT = api_settings.DATETIME_FORMAT
 
 
-class CONSTANTS:
-    '''
-    Constants cannot be changed at runtime
-    '''
-    TOKEN_KEY_LENGTH = 8
-    DIGEST_LENGTH = 128
-    SALT_LENGTH = 16
+# class CONSTANTS:
+#     '''
+#     Constants cannot be changed at runtime
+#     '''
+#     TOKEN_KEY_LENGTH = 8
+#     DIGEST_LENGTH = 128
+#     SALT_LENGTH = 16
 
-    def __setattr__(self, *args, **kwargs):
-        raise Exception('''
-            Constant values must NEVER be changed at runtime, as they are
-            integral to the structure of database tables
-            ''')
+#     def __setattr__(self, *args, **kwargs):
+#         raise Exception('''
+#             Constant values must NEVER be changed at runtime, as they are
+#             integral to the structure of database tables
+#             ''')
 
-CONSTANTS = CONSTANTS()
+# CONSTANTS = CONSTANTS()

@@ -4,22 +4,18 @@ except ImportError:
     def compare_digest(a, b):
         return a == b
 
-import binascii
-
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
+
 from rest_framework import exceptions
 from rest_framework.authentication import (
     BaseAuthentication, get_authorization_header,
 )
 
-from knox.crypto import hash_token
 from knox.models import AuthToken
 from knox.signals import token_expired
 from knox import defaults
-from knox.defaults import CONSTANTS
 
-from users.models import User
 
 class TokenAuthentication(BaseAuthentication):
     #######
@@ -43,7 +39,6 @@ class TokenAuthentication(BaseAuthentication):
 
     def authenticate(self, request):
         auth = get_authorization_header(request).split()
-        # prefix = defaults.AUTH_HEADER_PREFIX.encode()
         prefix = defaults.AUTH_HEADER_PREFIX.encode()
 
         if not auth or auth[0].lower() != prefix.lower():

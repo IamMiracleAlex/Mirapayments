@@ -35,7 +35,7 @@ class LoginView(APIView):
         user = authenticate(email=email, password=password)
         if not user:
             return FailureResponse(
-				detail='Invalid Credentials',
+				detail='Invalid credentials',
 				status=status.HTTP_404_NOT_FOUND
             )
         if not user.email_verified:
@@ -50,7 +50,7 @@ class LoginView(APIView):
         token = instances.first()
         data['live_token'] = token.live_token
         data['test_token'] = token.test_token
-        return SuccessResponse(detail='Login Successful', data=data)
+        return SuccessResponse(detail='Login successful', data=data)
 
 
 class LogoutView(APIView):
