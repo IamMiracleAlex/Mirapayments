@@ -6,7 +6,7 @@ class GroupFilter(SimpleListFilter):
     parameter_name = 'group'
 
     def lookups(self, request, model_admin):
-        print(request.GET)
+        # print(request.GET)
         groups = Group.objects.all()
         return (
             (group.id, group.name) for group in groups

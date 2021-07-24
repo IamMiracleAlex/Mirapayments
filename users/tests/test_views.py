@@ -45,7 +45,6 @@ class LoginViewTest(APITestCase):
         self.assertEqual(login.status_code, 403)
         self.assertEqual(login.data['detail'], 'Please verify your email address')
        
-    @skip('test fails because of some save method issues')   
     def test_login(self):
         '''Login with correct credentials'''
 

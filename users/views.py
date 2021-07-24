@@ -1,4 +1,4 @@
-from django.contrib.auth import authenticate
+from django.contrib.auth import authenticate, login
 from django.contrib.auth.signals import user_logged_in, user_logged_out
 from django.contrib.auth.tokens import default_token_generator  
 from django.utils.encoding import force_text
@@ -43,11 +43,16 @@ class LoginView(APIView):
                 detail='Please verify your email address',
                 status=status.HTTP_403_FORBIDDEN
             )
+        login(request, user)
+
         user_logged_in.send(sender=request.user.__class__,
             request=request, user=request.user)    
         data = UserSerializer(user).data
-        instances = AuthToken.objects.filter(user=user)
-        token = instances.first()
+        
+        # instances = AuthToken.objects.filter(user=user)
+        # token = instances.first()
+
+        token, _ = AuthToken.objects.get_or_create(user=user)
         data['live_token'] = token.live_token
         data['test_token'] = token.test_token
         return SuccessResponse(detail='Login successful', data=data)
@@ -137,7 +142,7 @@ class VerifyEmail(APIView):
         # print(user)
         # print(token)
         # print(uidb64)
-        # print(default_token_generator.check_token(user, token))
+        # print(default_token_generator.check_token(user, token))        
         if user and default_token_generator.check_token(user, token):
 
             if user.email_verified:

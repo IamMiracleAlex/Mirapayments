@@ -11,7 +11,5 @@ django.setup()                                                       #
 ######################################################################
 print("Ready!")
 
-from request.models import Request
-print(help(Request))
 
 
