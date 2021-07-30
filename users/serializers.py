@@ -15,7 +15,9 @@ from rest_framework.validators import UniqueValidator
 # from .models import *
 # from django.db.models import Q
 from users.models import User
-
+from helpers.mailers import send_user_activation_mail
+from accounts.models import Account
+from knox.models import AuthToken
 
 # class UserSerializer(serializers.ModelSerializer):
 #     accounts = serializers.SerializerMethodField(read_only=True)
@@ -122,10 +124,19 @@ class UserSerializer(serializers.ModelSerializer):
     last_name = serializers.CharField()
     phone = serializers.CharField(required=True)
     country = serializers.CharField(required=False)
+    account_name = serializers.CharField(write_only=True)
     class Meta:
         model = User
-        fields = ['email', 'password', 'first_name', 'last_name', 'phone', 'country']
+        fields = ['email', 'password', 'first_name', 'last_name', 'phone', 'country', 'account_name']
 
+    def create(self, validated_data):
+        name = validated_data.pop('account_name')
+        user = User.objects.create(**validated_data)
+        account = Account.objects.create(owner=user, name=name)
+        user.account = account
+        user.save()
+        AuthToken.objects.create(user=user, account=account)
+        return user
 
 class UserUpdateSerializer(serializers.Serializer):
     first_name = serializers.CharField(required=False)
@@ -144,3 +155,20 @@ class UserUpdateSerializer(serializers.Serializer):
        
         instance.save()
         return instance    
+
+
+class UserInvitationSerializer(serializers.Serializer):
+    email = serializers.EmailField(required=True,
+                validators=[UniqueValidator(queryset=User.objects.all(),
+                message='User with this email already exists')])
+    first_name = serializers.CharField()
+    last_name = serializers.CharField()
+
+    def __init__(self, instance, data, user, **kwargs):
+        super().__init__(instance=instance, data=data, **kwargs)
+        self.inviter = user
+
+    def invite(self, validated_data):
+        user = User.objects.create(**validated_data, is_active=False, account=self.inviter.account)
+        send_user_activation_mail(user, self.inviter.account.name)
+        return user

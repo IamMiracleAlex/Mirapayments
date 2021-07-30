@@ -1,4 +1,3 @@
-from operator import mod
 from django.db import models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
@@ -7,26 +6,26 @@ from djmoney.models.fields import MoneyField
 from djmoney.models.validators import MinMoneyValidator
 from djmoney.money import Money
 
-from accounts.utils import generate_unique_key, generate_account_number
-from accounts.exceptions import InsufficientBalance
+from helpers.utils import generate_unique_key, generate_account_number
+# from accounts.exceptions import InsufficientBalance
 
 
 class Account(models.Model):
-    INDIVIDUAL = 'individual'
-    CORPORATE = 'business'
-    RELIGIOUS = 'religious'
-    GOVERNMENT = 'government'
-    NGO = 'ngo'
+    INDIVIDUAL = 'Individual'
+    COMPANY = 'Company'
+    RELIGIOUS = 'Religious'
+    GOVERNMENT = 'Government'
+    NGO = 'NGO'
     ACCOUNT_CHOICES = (
         (INDIVIDUAL, INDIVIDUAL),
-        (CORPORATE, CORPORATE),
+        (COMPANY, COMPANY),
         (RELIGIOUS, RELIGIOUS),
         (GOVERNMENT, GOVERNMENT),
         (NGO, NGO),
     )
-    user = models.ForeignKey('users.User', on_delete=models.PROTECT)
+    owner = models.ForeignKey('users.User', on_delete=models.PROTECT, related_name='accounts')
     public_key = models.CharField(max_length=50, unique=True, editable=False)
-    account_type = models.CharField(choices=ACCOUNT_CHOICES, max_length=100)
+    account_type = models.CharField(choices=ACCOUNT_CHOICES, max_length=100, default=INDIVIDUAL)
     balance = MoneyField(max_digits=14, decimal_places=2, default_currency='NGN', default=0.0, validators=[MinMoneyValidator(0)])
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -34,18 +33,18 @@ class Account(models.Model):
     name = models.CharField(max_length=200)
 
     class Meta:
-        unique_together = ('user', 'account_type',)
+        unique_together = ('owner', 'account_type',)
 
     def __str__(self):
-        return "{}'s {} account".format(
-            self.user, 
+        return "{}'s {} Live account".format(
+            self.owner, 
             self.get_account_type_display()
         )
 
     def save(self, *args, **kwargs):
         if not self.pk:
-            self.account_number = generate_account_number(Account, 'account_number', 10)
-            self.public_key = generate_unique_key(Account, 'live_pk', 40)
+            self.account_number = generate_account_number(klass=Account, field='account_number', len=10)
+            self.public_key = generate_unique_key(klass=Account, field='public_key', len=40)
         self.full_clean()
         super().save(*args, **kwargs)
 
@@ -53,7 +52,7 @@ class Account(models.Model):
         return self.balance.amount >= amount
 
     def valid_money(self, amount):
-        if not isinstance(Money, amount):
+        if not isinstance(amount, Money):
            return False
         
         if self.balance.currency != amount.currency:
@@ -108,19 +107,19 @@ class Account(models.Model):
 
 
 class TestAccount(models.Model):
-    INDIVIDUAL = 'individual'
-    CORPORATE = 'business'
-    RELIGIOUS = 'religious'
-    GOVERNMENT = 'government'
-    NGO = 'ngo'
+    INDIVIDUAL = 'Individual'
+    COMPANY = 'Company'
+    RELIGIOUS = 'Religious'
+    GOVERNMENT = 'Government'
+    NGO = 'NGO'
     ACCOUNT_CHOICES = (
         (INDIVIDUAL, INDIVIDUAL),
-        (CORPORATE, CORPORATE),
+        (COMPANY, COMPANY),
         (RELIGIOUS, RELIGIOUS),
         (GOVERNMENT, GOVERNMENT),
         (NGO, NGO),
     )
-    user = models.ForeignKey('users.User', on_delete=models.PROTECT)
+    owner = models.ForeignKey('users.User', on_delete=models.PROTECT)
     public_key = models.CharField(max_length=50, unique=True, editable=False)
     account_type = models.CharField(choices=ACCOUNT_CHOICES, max_length=100)
     balance = MoneyField(max_digits=14, decimal_places=2, default_currency='NGN', default=0.0, validators=[MinMoneyValidator(0)])
@@ -128,19 +127,17 @@ class TestAccount(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     account_number = models.IntegerField(unique=True, editable=False)
     name = models.CharField(max_length=200)
-    class Meta:
-        unique_together = ('user', 'account_type',)
-
+ 
     def __str__(self):
-        return "{}'s {} account".format(
-            self.user, 
+        return "{}'s {} Test account".format(
+            self.owner, 
             self.get_account_type_display()
         )
 
     def save(self, *args, **kwargs):
         if not self.pk:
-            self.account_number = generate_account_number(Account, 'account_number', 10)
-            self.public_key = generate_unique_key(Account, 'live_pk', 40)
+            self.account_number = generate_account_number(klass=Account, field='account_number', len=10)
+            self.public_key = generate_unique_key(klass=Account, field='public_key', len=40)
         self.full_clean()
         super().save(*args, **kwargs)
 
@@ -148,7 +145,7 @@ class TestAccount(models.Model):
         return self.balance.amount >= amount
 
     def valid_money(self, amount):
-        if not isinstance(Money, amount):
+        if not isinstance(amount, Money):
            return False
         
         if self.balance.currency != amount.currency:
@@ -207,18 +204,19 @@ class TestAccount(models.Model):
         self.full_clean()
         super().save(*args, **kwargs)
 
+
 # class SubAccount(models.Model):
 #     pass
+
 
 # @receiver(post_save, sender=Account)
 # def create_test_account(sender, instance, created, **kwargs):
 #     if created:
 #         TestAccount.objects.create(
-#             user=instance.user,
+#             owner=instance.owner,
 #             account_type=instance.account_type,
 #             balance=instance.balance,
 #             sub_account=instance.sub_account, 
 #             account_number=instance.account_number, 
 #             name=instance.name,
 #         )
-

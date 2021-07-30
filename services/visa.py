@@ -26,8 +26,7 @@ class Visa:
     key = 'services/certificates/visa_private_key.pem'
     timeout = 30
     
-    @classmethod
-    def request(cls, method: str, url: str, headers: dict = {}, data: dict = {},  timeout: int = timeout):
+    def request(self, method: str, url: str, headers: dict = {}, data: dict = {},  timeout: int = timeout):
         '''Send requests to Visa using Two-Way (Mutual) SSL'''
 
         headers = headers.update({
@@ -36,31 +35,31 @@ class Visa:
         response = requests.request(
                                 method,
                                 url,
-                                cert=(cls.cert, cls.key),
+                                cert=(self.cert, self.key),
                                 headers = headers,
-                                auth=(cls.user_id, cls.password),
+                                auth=(self.user_id, self.password),
                                 data = data,
                                 timeout=timeout
                                 )
 
         return response
 
-    @classmethod
-    def hello_world(cls):
+    def hello_world(self):
         '''Mutual auth hello world request'''
 
-        response = cls.request(
+        response = self.request(
                         method='get', 
                         url='https://sandbox.api.visa.com/vdp/helloworld'
                         )
         return response
 
-    @classmethod
-    def pull_funds(cls):
+
+    def pull_funds(self):
         '''
         pull funds from the sender's Visa account
         https://developer.visa.com/capabilities/visa_direct/reference#visa_direct__funds_transfer__v1__pullfunds
         '''
         pass
 
-print(Visa.hello_world().json())
+# visa = Visa()
+# print(visa.hello_world().json())

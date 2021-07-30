@@ -66,7 +66,7 @@ class TokenAuthentication(BaseAuthentication):
         token = token.decode("utf-8")
 
         if token.startswith(defaults.LIVE_KEY_PREFIX):
-            token = token.lstrip(defaults.LIVE_KEY_PREFIX)
+            # token = token.lstrip(defaults.LIVE_KEY_PREFIX)
             for auth_token in AuthToken.objects.filter(live_token=token):
                 # if self._cleanup_token(auth_token):
                 #                     continue

@@ -5,6 +5,6 @@ from knox import models
 
 @admin.register(models.AuthToken)
 class AuthTokenAdmin(admin.ModelAdmin):
-    list_display = ('test_token', 'user', 'created',)
-    fields = ()
+    list_display = ('test_token', 'user', 'account', 'created',)
+    # fields = ()
     raw_id_fields = ('user',)

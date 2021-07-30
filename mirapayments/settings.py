@@ -54,7 +54,7 @@ INSTALLED_APPS = [
     'users',
     'knox',
 
-    # 'accounts',
+    'accounts',
     # 'transactions',
     'logs',
 ]

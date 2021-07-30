@@ -1,5 +1,5 @@
-from django.core import exceptions
+# from django.core import exceptions
 
 
-class InsufficientBalance(exceptions.IntegrityError):
-    pass
+# class InsufficientBalance(exceptions.IntegrityError):
+#     pass
