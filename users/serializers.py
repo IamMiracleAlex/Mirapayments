@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
 
-# from accounts.serializers import AccountSerializer
+from accounts.serializers import AccountSerializer
 # from accounts.models import Account
 # from subscriptions.models import Subscription
 # from subscriptions.serializers import SubscriptionSerializer
@@ -125,16 +125,24 @@ class UserSerializer(serializers.ModelSerializer):
     phone = serializers.CharField(required=True)
     country = serializers.CharField(required=False)
     account_name = serializers.CharField(write_only=True)
+    accounts = serializers.SerializerMethodField(read_only=True)
+
+
+    def get_accounts(self, obj):
+        accounts = obj.accounts.all()
+        data = AccountSerializer(accounts, many=True).data
+        # return { i['type_of_account']: i for i in accounts }
+        return data
+    
     class Meta:
         model = User
-        fields = ['email', 'password', 'first_name', 'last_name', 'phone', 'country', 'account_name']
+        fields = ['email', 'password', 'first_name', 'last_name', 'phone', 'country', 'account_name', 'accounts']
 
     def create(self, validated_data):
         name = validated_data.pop('account_name')
         user = User.objects.create(**validated_data)
-        account = Account.objects.create(owner=user, name=name)
-        user.account = account
-        user.save()
+        account = Account.objects.create(name=name)
+        user.accounts.add(account)
         AuthToken.objects.create(user=user, account=account)
         return user
 

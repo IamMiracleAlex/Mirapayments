@@ -12,7 +12,7 @@ class User(AbstractUser):
     # country = models.CharField(max_length=150, default='nigeria')
     send_notificatioens = models.BooleanField(default=False)
     updated_at = models.DateTimeField(auto_now=True)
-    account = models.ForeignKey('accounts.Account', null=True, blank=True, on_delete=models.CASCADE)
+    accounts = models.ManyToManyField('accounts.Account')
 
 
     USERNAME_FIELD = 'email'

@@ -12,3 +12,4 @@ class UserFactory(factory.django.DjangoModelFactory):
     is_superuser = False
     is_staff = False
     email_verified = False
+    accounts = factory.RelatedFactory('accounts.tests.factories.AccountFactory')

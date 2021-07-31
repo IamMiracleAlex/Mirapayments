@@ -4,7 +4,8 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 
 from users.tests.factories import UserFactory
-
+from knox.tests.factories import AuthTokenFactory
+from accounts.tests.factories import AccountFactory
 
 class LoginViewTest(APITestCase):   
 
@@ -48,9 +49,14 @@ class LoginViewTest(APITestCase):
     def test_login(self):
         '''Login with correct credentials'''
 
-        UserFactory(**self.auth_data, email_verified=True)
+        # set up data
+        user = UserFactory(**self.auth_data, email_verified=True)
+        account = AccountFactory()
+        user.accounts.add(account)
+        AuthTokenFactory(user=user, account=account)
        
         login = self.client.post(self.url, data=self.auth_data)
+       
         self.assertEqual(login.status_code, 200)
         self.assertEqual(login.data['detail'], 'Login successful')
         self.client.logout()
@@ -68,6 +74,7 @@ class SignUpViewTest(APITestCase):
                     'email':'email@example.com',
                     'first_name': 'Miracle',
                     'last_name': 'Alex',
+                    'account_name': 'Mirapayments'
                     }
 
     def test_user_creation(self):

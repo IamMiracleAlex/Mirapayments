@@ -15,6 +15,7 @@ class UserSerializerTest(APITestCase):
             'phone': '08023456780',
             'country': 'Nigeria',
             'password': 'password',
+            'account_name': 'Mirapayments'
         }
         user_serializer = UserSerializer(data=data)
 

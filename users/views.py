@@ -28,6 +28,8 @@ class LoginView(APIView):
     def post(self, request):
         email = request.data.get("email")
         password = request.data.get("password")
+        account_number = request.data.get("account_number")
+
         if email is None or password is None:
             return FailureResponse(
 	            detail='Please provide both email and password',
@@ -49,11 +51,16 @@ class LoginView(APIView):
         user_logged_in.send(sender=request.user.__class__,
             request=request, user=request.user)    
         data = serializers.UserSerializer(user).data
-        
-        # instances = AuthToken.objects.filter(user=user)
-        # token = instances.first()
+       
+        if user.accounts.all().count() > 1 and account_number:
+            token = AuthToken.objects.filter(user=user, account__account_number=account_number).first()
 
-        token, _ = AuthToken.objects.get_or_create(user=user)
+        elif user.accounts.all().count() == 1:
+            token = AuthToken.objects.filter(user=user).first()
+
+        else:
+            return SuccessResponse(detail="Choose account to login to", data=data, status=status.HTTP_300_MULTIPLE_CHOICES)
+
         data['live_token'] = token.live_token
         data['test_token'] = token.test_token
         return SuccessResponse(detail='Login successful', data=data)
@@ -81,15 +88,11 @@ class SignUpView(APIView):
         serializer = serializers.UserSerializer(data=request.data)
         if serializer.is_valid(raise_exception=True):
             user = serializer.save()
-         
-            data = serializer.data
-            # do we really need to send the token on signup?
-            # data['live_token'] = instance.live_token
-            # data['test_token'] = instance.test_token
+                 
             send_verification_email(user)
             return SuccessResponse(
                 detail='User created successfully',
-                data=data,
+                data=serializer.data,
                 status=status.HTTP_201_CREATED
             )
 				

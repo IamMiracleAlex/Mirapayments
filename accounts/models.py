@@ -23,7 +23,7 @@ class Account(models.Model):
         (GOVERNMENT, GOVERNMENT),
         (NGO, NGO),
     )
-    owner = models.ForeignKey('users.User', on_delete=models.PROTECT, related_name='accounts')
+    # owner = models.ForeignKey('users.User', on_delete=models.PROTECT, related_name='accounts')
     public_key = models.CharField(max_length=50, unique=True, editable=False)
     account_type = models.CharField(choices=ACCOUNT_CHOICES, max_length=100, default=INDIVIDUAL)
     balance = MoneyField(max_digits=14, decimal_places=2, default_currency='NGN', default=0.0, validators=[MinMoneyValidator(0)])
@@ -32,8 +32,7 @@ class Account(models.Model):
     account_number = models.IntegerField(unique=True, editable=False)
     name = models.CharField(max_length=200)
 
-    class Meta:
-        unique_together = ('owner', 'account_type',)
+ 
 
     def __str__(self):
         return "{}'s {} Live account".format(
@@ -119,7 +118,6 @@ class TestAccount(models.Model):
         (GOVERNMENT, GOVERNMENT),
         (NGO, NGO),
     )
-    owner = models.ForeignKey('users.User', on_delete=models.PROTECT)
     public_key = models.CharField(max_length=50, unique=True, editable=False)
     account_type = models.CharField(choices=ACCOUNT_CHOICES, max_length=100)
     balance = MoneyField(max_digits=14, decimal_places=2, default_currency='NGN', default=0.0, validators=[MinMoneyValidator(0)])
