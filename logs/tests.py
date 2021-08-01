@@ -9,7 +9,7 @@ from logs.models import DatabaseLog
 
 class TestDbLogger(TestCase):
     def setUp(self):
-        self.logger = logging.getLogger('db_logger')
+        self.logger = logging.getLogger('db')
         self.db_log_admin = DatabaseLogAdmin(DatabaseLog, AdminSite())
 
     def __test_log_aux(self, msg, fn, level):

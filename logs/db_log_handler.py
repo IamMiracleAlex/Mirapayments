@@ -6,7 +6,7 @@ DJANGO_DB_LOGGER_ENABLE_FORMATTER = False
 
 class DatabaseLogHandler(logging.Handler):
     def emit(self, record):
-        from .models import DatabaseLog
+        from logs.models import DatabaseLog
         
         trace = None
 

@@ -4,7 +4,6 @@ except ImportError:
     def compare_digest(a, b):
         return a == b
 
-from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 
 from rest_framework import exceptions
@@ -13,7 +12,6 @@ from rest_framework.authentication import (
 )
 
 from knox.models import AuthToken
-from knox.signals import token_expired
 from knox import defaults
 
 
@@ -28,8 +26,7 @@ class TokenAuthentication(BaseAuthentication):
     This authentication scheme uses Knox AuthTokens for authentication.
 
     Similar to DRF's TokenAuthentication, it overrides a large amount of that
-    authentication scheme to cope with the fact that Tokens are not stored
-    in plaintext in the database
+    authentication scheme, have live and test tokens
 
     If successful
     - `request.user` will be a django `User` instance
@@ -66,33 +63,19 @@ class TokenAuthentication(BaseAuthentication):
         token = token.decode("utf-8")
 
         if token.startswith(defaults.LIVE_KEY_PREFIX):
-            # token = token.lstrip(defaults.LIVE_KEY_PREFIX)
             for auth_token in AuthToken.objects.filter(live_token=token):
-                # if self._cleanup_token(auth_token):
-                #                     continue
+               
                 if compare_digest(token, auth_token.live_token):
-                    if defaults.AUTO_REFRESH and auth_token.expiry:
-                        self.renew_token(auth_token)
                     return self.validate_user(auth_token, is_live=True)
 
         elif token.startswith(defaults.TEST_KEY_PREFIX):
             for auth_token in AuthToken.objects.filter(test_token=token):
-                # if self._cleanup_token(auth_token):
-                #     continue
-
+        
                 if compare_digest(token, auth_token.test_token):
                     return self.validate_user(auth_token, is_live=False)        
 
         raise exceptions.AuthenticationFailed(msg)
 
-    def renew_token(self, auth_token):
-        current_expiry = auth_token.expiry
-        new_expiry = timezone.now() + defaults.TOKEN_TTL
-        auth_token.expiry = new_expiry
-        # Throttle refreshing of token to avoid db writes
-        delta = (new_expiry - current_expiry).total_seconds()
-        if delta > defaults.MIN_REFRESH_INTERVAL:
-            auth_token.save(update_fields=('expiry',))
 
     def validate_user(self, auth_token, is_live):
         if not auth_token.user.is_active:
@@ -103,19 +86,3 @@ class TokenAuthentication(BaseAuthentication):
     def authenticate_header(self, request):
         return defaults.AUTH_HEADER_PREFIX
 
-    def _cleanup_token(self, auth_token):
-        for other_token in auth_token.user.auth_token_set.all():
-            if other_token.digest != auth_token.digest and other_token.expiry:
-                if other_token.expiry < timezone.now():
-                    other_token.delete()
-                    username = other_token.user.get_username()
-                    token_expired.send(sender=self.__class__,
-                                       username=username, source="other_token")
-        if auth_token.expiry is not None:
-            if auth_token.expiry < timezone.now():
-                username = auth_token.user.get_username()
-                auth_token.delete()
-                token_expired.send(sender=self.__class__,
-                                   username=username, source="auth_token")
-                return True
-        return False

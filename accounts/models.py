@@ -23,7 +23,6 @@ class Account(models.Model):
         (GOVERNMENT, GOVERNMENT),
         (NGO, NGO),
     )
-    # owner = models.ForeignKey('users.User', on_delete=models.PROTECT, related_name='accounts')
     public_key = models.CharField(max_length=50, unique=True, editable=False)
     account_type = models.CharField(choices=ACCOUNT_CHOICES, max_length=100, default=INDIVIDUAL)
     balance = MoneyField(max_digits=14, decimal_places=2, default_currency='NGN', default=0.0, validators=[MinMoneyValidator(0)])
@@ -35,10 +34,7 @@ class Account(models.Model):
  
 
     def __str__(self):
-        return "{}'s {} Live account".format(
-            self.owner, 
-            self.get_account_type_display()
-        )
+        return "Live account: {}".format(self.account_number)
 
     def save(self, *args, **kwargs):
         if not self.pk:
@@ -127,10 +123,8 @@ class TestAccount(models.Model):
     name = models.CharField(max_length=200)
  
     def __str__(self):
-        return "{}'s {} Test account".format(
-            self.owner, 
-            self.get_account_type_display()
-        )
+        return "Test account: {}".format(self.account_number)
+
 
     def save(self, *args, **kwargs):
         if not self.pk:

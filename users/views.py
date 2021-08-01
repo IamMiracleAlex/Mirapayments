@@ -77,6 +77,20 @@ class LogoutView(APIView):
                              request=request, user=request.user)
         return SuccessResponse(None, status=status.HTTP_204_NO_CONTENT)
 
+        
+class LogoutAllView(APIView):
+    '''
+    Log the user out of all sessions
+    I.E. deletes all auth tokens for the user
+    POST: /users/logoutall/
+    '''
+
+    def post(self, request):
+        request.user.auth_token_set.all().delete()
+        user_logged_out.send(sender=request.user.__class__,
+                             request=request, user=request.user)
+        return SuccessResponse(None, status=status.HTTP_204_NO_CONTENT)
+
 class SignUpView(APIView):
     '''
     Create new user accounts
