@@ -10,5 +10,5 @@ class AccountFactory(factory.django.DjangoModelFactory):
         model = 'accounts.Account'
 
     account_type = factory.Iterator([x[0] for x in Account.ACCOUNT_CHOICES])
-    balance =  Money(1000.00)
+    balance =  Money(1000, 'NGN')
     name = factory.Sequence(lambda n: 'account name {}'.format(n))

@@ -1,11 +1,19 @@
 from unittest import skip
 
+from django.core import mail
+from django.test.utils import override_settings
+from django.contrib.auth.tokens import default_token_generator
+from django.utils.encoding import force_bytes
+from django.utils.http import urlsafe_base64_encode
+
 from rest_framework import status
 from rest_framework.test import APITestCase
 
+from users.models import User
 from users.tests.factories import UserFactory
 from knox.tests.factories import AuthTokenFactory
 from accounts.tests.factories import AccountFactory
+
 
 class LoginViewTest(APITestCase):   
 
@@ -62,7 +70,6 @@ class LoginViewTest(APITestCase):
         self.client.logout()
 
 
-
 class SignUpViewTest(APITestCase):
 
     @classmethod
@@ -84,7 +91,6 @@ class SignUpViewTest(APITestCase):
         self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
         self.assertIn('User created', resp.data['detail'])
         self.assertEqual(resp.data['data']['email'], self.data['email'])
-
 
 
 class UserDetailUpdateViewTest(APITestCase):
@@ -117,3 +123,64 @@ class UserDetailUpdateViewTest(APITestCase):
         self.assertEqual(resp.data['data']['phone'], self.user.phone)
         self.assertEqual(resp.data['data']['first_name'], new_data['first_name'])
         self.assertEqual(resp.data['data']['last_name'], new_data['last_name'])
+
+
+class VerificationEmailTest(APITestCase):
+
+    def setUp(self):
+        self.signup_url = '/users/signup/'
+        self.data = {'phone':'08026043569', 
+                    'password':'password123',
+                    'email':'email@example.com',
+                    'first_name': 'Miracle',
+                    'last_name': 'Alex',
+                    'account_name': 'Mirapayments'
+                }
+
+    @override_settings(EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend')
+    def test_send_verification_email(self):
+        '''Assert that verification email is sent'''
+
+        # sign up a new user
+        resp = self.client.post(self.signup_url, data=self.data)
+        # assert that verification mail was sent on signup
+        self.assertEqual(len(mail.outbox), 1)
+      
+        # try to resend verification email
+        invite_url = '/users/send-verification-email/'
+        email = resp.data['data']['email']
+        user = User.objects.get(email=email)
+        self.client.force_authenticate(user)
+        resp = self.client.post(invite_url)
+
+        # assert request is successfull and mail was sent
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(mail.outbox), 2)
+
+    def test_token_verification(self):
+        '''Assert that tokens verification works as expected'''
+
+        # create a user and tokens
+        user = UserFactory()
+        uidb64 = urlsafe_base64_encode(force_bytes(user.id))
+        token = default_token_generator.make_token(user)
+
+        verify_url = f'/users/verify-email/{uidb64}/{token}/'
+        resp = self.client.get(verify_url)
+
+        # Assert email was verified
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        self.assertEqual(resp.data['detail'], 'Email verification was successful')
+
+        # Assert email already verified
+        resp = self.client.get(verify_url)
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        self.assertEqual(resp.data['detail'], 'Your email has already been verified')
+
+        # Assert email verification failure with invalid token
+        new_token = 'this-is-an-invalid-token'
+        verify_url = f'/users/verify-email/{uidb64}/{new_token}/'
+        resp = self.client.get(verify_url)
+
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('Email verification failed', resp.data['detail'])
