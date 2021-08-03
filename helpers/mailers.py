@@ -29,3 +29,14 @@ def send_user_activation_mail(user, account_name):
 	message = render_to_string('users/activation_email.txt', context)
 	subject = 'Activate Your Account'
 	send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, [email])
+
+def send_password_reset_mail(user):
+	context = {
+		'name': user.first_name,
+		'uid': urlsafe_base64_encode(force_bytes(user.id)),
+		'token': default_token_generator.make_token(user),
+	}
+	email = user.email
+	message = render_to_string('users/password_reset.txt', context)
+	subject = 'Reset Your Password'
+	send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, [email])

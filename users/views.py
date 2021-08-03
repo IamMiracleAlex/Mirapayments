@@ -14,7 +14,8 @@ from knox.models import AuthToken
 
 from users import serializers
 from users.models import User
-from helpers.mailers import send_verification_email
+from users.signals import reset_password_token_created
+from helpers.mailers import send_verification_email, send_password_reset_mail
 from helpers.api_response import SuccessResponse, FailureResponse
 
 
@@ -170,7 +171,31 @@ class VerifyEmail(APIView):
             return FailureResponse(detail='Email verification failed. Token is either invalid or expired')
 
 
-		
+class ResetPasswordRequest(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request, *args, **kwargs):
+        """
+        An api view which provides a method to request a password reset token based on an e-mail address
+        Sends a signal reset_password_token_created when a reset token was created.
+        POST: /users/password-reset-request/
+        """
+
+        email = request.data.get('email')
+        if not email:
+            return FailureResponse(detail='Email is required')
+
+        # find a user by email address (case insensitive search)
+        user = User.objects.filter(email__iexact=email)
+
+        if user.exists() and getattr(user.first(), 'is_active', False):
+            send_password_reset_mail(user.first())            
+            # send a signal that the password token was created
+            reset_password_token_created.send(sender=self.__class__, user=self)
+            return SuccessResponse(detail='Kindly check your email to set your password')
+
+
+
 
 
 # def test_email(request):
