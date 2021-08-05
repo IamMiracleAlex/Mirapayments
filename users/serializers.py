@@ -1,3 +1,6 @@
+from django.contrib.auth.password_validation import validate_password, get_password_validators
+from django.conf import settings
+
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
 
@@ -15,7 +18,9 @@ from accounts.serializers import AccountSerializer
 # from .models import *
 # from django.db.models import Q
 from users.models import User
+from users.signals import pre_password_reset, post_password_reset
 from helpers.mailers import send_user_activation_mail
+from helpers.utils import validate_token
 from accounts.models import Account
 from knox.models import AuthToken
 
@@ -131,7 +136,6 @@ class UserSerializer(serializers.ModelSerializer):
     def get_accounts(self, obj):
         accounts = obj.accounts.all()
         data = AccountSerializer(accounts, many=True).data
-        # return { i['type_of_account']: i for i in accounts }
         return data
     
     class Meta:
@@ -172,11 +176,58 @@ class UserInvitationSerializer(serializers.Serializer):
     first_name = serializers.CharField()
     last_name = serializers.CharField()
 
-    def __init__(self, instance, data, user, **kwargs):
-        super().__init__(instance=instance, data=data, **kwargs)
+    def __init__(self, user, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.inviter = user
 
     def invite(self, validated_data):
-        user = User.objects.create(**validated_data, is_active=False, account=self.inviter.account)
+        user = User.objects.create(**validated_data, is_active=False)
+        user.accounts.add(self.inviter.account)
         send_user_activation_mail(user, self.inviter.account.name)
         return user
+
+
+class TokenValidateMixin:
+    def validate(self, data):
+        token = data.get('token')
+        uid = data.get('uid')
+
+        user, is_valid = validate_token(uid, token)
+        if not (user and is_valid):
+            raise serializers.ValidationError("The token entered is not valid. Please check and try again.")
+        self.user = user
+
+        password = data.get('password')
+        if password:
+            try:
+                validate_password(
+                    password=password,
+                    user=self.user,
+                    password_validators=get_password_validators(settings.AUTH_PASSWORD_VALIDATORS)
+                )
+            except Exception as e:
+                raise serializers.ValidationError("The token entered is not valid. Please check and try again.")
+        return data
+
+
+class ResetPasswordConfirmSerializer(TokenValidateMixin, serializers.Serializer):
+    password = serializers.CharField()
+    token = serializers.CharField()
+    uid = serializers.CharField()
+
+    def reset_password(self):
+        password = self.validated_data.get('password')
+        
+        pre_password_reset.send(sender=self.__class__, user=self.user)
+    
+        self.user.set_password(password)
+        self.user.save()
+
+        post_password_reset.send(sender=self.__class__, user=self.user)
+
+        return
+
+
+class ValidateTokenSerializer(TokenValidateMixin, serializers.Serializer):
+    token = serializers.CharField()
+    uid = serializers.CharField()

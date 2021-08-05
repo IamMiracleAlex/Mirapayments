@@ -1,9 +1,5 @@
-from accounts.models import Account
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.signals import user_logged_in, user_logged_out
-from django.contrib.auth.tokens import default_token_generator  
-from django.utils.encoding import force_text
-from django.utils.http import urlsafe_base64_decode
 
 from rest_framework.views import APIView
 from rest_framework import generics
@@ -17,7 +13,7 @@ from users.models import User
 from users.signals import reset_password_token_created
 from helpers.mailers import send_verification_email, send_password_reset_mail
 from helpers.api_response import SuccessResponse, FailureResponse
-
+from helpers.utils import validate_token
 
 class LoginView(APIView):
     '''
@@ -152,13 +148,10 @@ class VerifyEmail(APIView):
     permission_classes = [AllowAny]
     
     def get(self, request, uidb64, token, *args, **kwargs):
-        try:
-            id = force_text(urlsafe_base64_decode(uidb64))
-            user = User.objects.get(id=id)
-        except (TypeError, ValueError, OverflowError, User.DoesNotExist):
-            user = None
+
+        user, is_valid = validate_token(uidb64, token)
   
-        if user and default_token_generator.check_token(user, token):
+        if user and is_valid:
 
             if user.email_verified:
                 return SuccessResponse(detail='Your email has already been verified')
@@ -195,40 +188,35 @@ class ResetPasswordRequest(APIView):
             return SuccessResponse(detail='Kindly check your email to set your password')
 
 
+class ResetPasswordValidateToken(APIView):
+    """
+    An api view which provides a method to verify that a token is valid
+    POST: /users/reset-password-validate-token/
+    """
+    permission_classes = [AllowAny]
+    serializer_class = serializers.ValidateTokenSerializer
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.serializer_class(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        return SuccessResponse(detail="Token is valid")
 
 
 
-# def test_email(request):
-# 	account_activation_token = AccountActivationTokenGenerator()
-# 	user = CustomUser.objects.first()
-# 	context = {
-# 		'name': user.first_name,
-# 		'email': user.email,
-# 		'domain': get_current_site(request).domain,
-# 		'uid': urlsafe_base64_encode(force_bytes(user.id)),
-# 		'token': account_activation_token.make_token(user),
-# 	}
-# 	# return render(request, 'emails/activate_email.html', context=context)
-# 	# return render(request, 'emails/transaction_failed.html', context=context)
-# 	return render(request, 'emails/safelock_maturity.html', context=context)
-# 	# return render(request, 'emails/transaction_success.html', context=context)
+class ResetPasswordConfirm(APIView):
+    """
+    An Api View which provides a method to reset a password based on a unique token
+    POST: /users/reset-password-confirm/
+    """
+    permission_classes = [AllowAny]
+    serializer_class = serializers.ResetPasswordConfirmSerializer
 
+    def post(self, request, *args, **kwargs):
+        serializer = self.serializer_class(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.reset_password()
+        return SuccessResponse(detail="Password reset was successful")
 
-# @shared_task
-# def generate_account_number(user_id):
-# 	user = CustomUser.objects.get(id=user_id)
-# 	monnify = MonnifyService()
-# 	res = monnify.create_reserved_accounts(user)
-# 	if (res['requestSuccessful'] == True):
-# 		user.account_number = res['responseBody']['accountNumber']
-# 		user.account_bank_name = res['responseBody']['bankName']
-# 		user.save()
-# 		return user
-
-
-
-    
-    
     
 class UserInvitationView(APIView):
 
@@ -240,7 +228,7 @@ class UserInvitationView(APIView):
 
         serializer = serializers.UserInvitationSerializer(request.data)
         if serializer.is_valid():
-            serializer.save()
+            serializer.invite()
 
         # staff_form = CompanyStaffRegistration(request.user, request.POST)
         # if request.user.user_type.user_type == 'Admin':

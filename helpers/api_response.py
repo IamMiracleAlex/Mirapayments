@@ -34,12 +34,17 @@ class CustomJSONRenderer(JSONRenderer):
 
     def render(self, data, accepted_media_type=None, renderer_context=None):
         status = renderer_context['response'].status_code < 400
-      
+        
         if isinstance(data, dict):
             data = OrderedDict(data.items())
-        data['status'] = status    
-        if not data.__contains__('detail'):
+        data['status'] = status
+
+        if not 'detail' in data:
             data['detail'] = 'success' if status else 'error'
         data.move_to_end('detail', last=False)
         data.move_to_end('status', last=False)
+
+        if 'non_field_errors' in data:
+            data['detail'] = data.pop('non_field_errors')[0]
+            
         return super(CustomJSONRenderer, self).render(data, accepted_media_type, renderer_context)
