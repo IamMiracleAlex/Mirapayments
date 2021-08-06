@@ -184,3 +184,53 @@ class VerificationEmailTest(APITestCase):
 
         self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn('Email verification failed', resp.data['detail'])
+
+
+class PasswordResetTest(APITestCase):
+    def setUp(self):
+        self.user = UserFactory()
+
+    @override_settings(EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend')
+    def test_password_reset_request(self):
+        '''Assert that password reset token was sent'''
+
+        pwd_req_url = '/users/password-reset-request/'
+        resp = self.client.post(pwd_req_url, {'email': self.user.email})
+
+        # assert request is successfull and mail was sent
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(mail.outbox), 1)
+
+    def test_validate_token(self):
+        '''Assert that token is valid'''
+
+        # create a user and tokens
+        uidb64 = urlsafe_base64_encode(force_bytes(self.user.id))
+        token = default_token_generator.make_token(self.user)
+
+        # test validate token url
+        validate_token_url = '/users/reset-password-validate-token/'
+        validate_token_data = {'uid': uidb64, 'token': token}
+        resp = self.client.post(validate_token_url, validate_token_data)
+
+        # Assert validate token is  successful
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        self.assertEqual(resp.data['detail'], 'Token is valid')
+
+    def test_password_reset_confirm(self):
+        '''Assert that reset was confirmed'''
+
+        # create a user and tokens
+        user = UserFactory(email="email@gmail.com")
+        uidb64 = urlsafe_base64_encode(force_bytes(user.id))
+        token = default_token_generator.make_token(user)
+
+        # Assert password is reset
+        pwd_reset_confirm_url = '/users/reset-password-confirm/'
+        pwd_reset_confirm_data = {
+            'uid': uidb64, 'token': token, 'password': 'mirapayments'
+        }
+        resp = self.client.post(pwd_reset_confirm_url, pwd_reset_confirm_data)
+        
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        self.assertEqual(resp.data['detail'], 'Password reset was successful')
