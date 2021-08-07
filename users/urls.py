@@ -14,4 +14,8 @@ urlpatterns = [
     path('password-reset-request/', views.ResetPasswordRequest.as_view()),
     path('reset-password-validate-token/', views.ResetPasswordValidateToken.as_view()),
     path('reset-password-confirm/', views.ResetPasswordConfirm.as_view()),
+    path('invite/', views.UserInvitationView.as_view()),
+    path('list/<str:account_number>/', views.ListAccountUsersView.as_view()),
+    path('me/accounts/', views.ListUsersAccountsView.as_view()),
+    path('activate/', views.ActivateInvitedUser.as_view()),
 ]

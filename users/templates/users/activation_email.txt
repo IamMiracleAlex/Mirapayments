@@ -1,13 +1,13 @@
-Hi {{name}},
+Hi,
 
 
-Congratulations! You've been invited to join {{account_name}} the 
-first step towards achieving your financial goals. 
+Congratulations! You've been invited to join {{account_name}}  with email {{email}}. 
+The first step towards achieving your financial goals. 
 Our desire at Mira Payments is to make payments seamless for everyone.
 
 Please click on the link below to activate your account. 
 	
-http://localhost:8000/users/set-password/{{uid}}/{{token}}/
+http://localhost:8000/users/set-password/{{uid}}/
 
 
 Please copy and paste the link on your browser if the link is not clickable.

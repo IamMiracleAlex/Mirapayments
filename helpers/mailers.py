@@ -20,9 +20,8 @@ def send_verification_email(user):
 
 def send_user_activation_mail(user, account_name):
 	context = {
-		'name': user.first_name,
+		'email': user.email,
 		'uid': urlsafe_base64_encode(force_bytes(user.id)),
-		'token': default_token_generator.make_token(user),
         'account_name': account_name
 	}
 	email = user.email

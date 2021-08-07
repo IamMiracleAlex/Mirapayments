@@ -1,5 +1,7 @@
 from django.contrib.auth.password_validation import validate_password, get_password_validators
 from django.conf import settings
+from django.utils.encoding import force_text
+from django.utils.http import urlsafe_base64_decode
 
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
@@ -173,17 +175,28 @@ class UserInvitationSerializer(serializers.Serializer):
     email = serializers.EmailField(required=True,
                 validators=[UniqueValidator(queryset=User.objects.all(),
                 message='User with this email already exists')])
-    first_name = serializers.CharField()
-    last_name = serializers.CharField()
+    role = serializers.CharField()
+    account_number = serializers.CharField()
 
     def __init__(self, user, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.inviter = user
 
-    def invite(self, validated_data):
-        user = User.objects.create(**validated_data, is_active=False)
-        user.accounts.add(self.inviter.account)
-        send_user_activation_mail(user, self.inviter.account.name)
+    def validate_account_number(self, value):
+        try:
+            account = Account.objects.get(account_number=value)
+            self.account = account
+            return value
+        except Account.DoesNotExist:
+            raise serializers.ValidationError('The account_number is not valid')    
+
+    def invite(self):
+        role = self.validated_data.pop('role') # use role for?
+        self.validated_data.pop('account_number')
+
+        user = User.objects.create(**self.validated_data, is_active=False)
+        user.accounts.add(self.account)
+        send_user_activation_mail(user, self.account.name)
         return user
 
 
@@ -206,7 +219,7 @@ class TokenValidateMixin:
                     password_validators=get_password_validators(settings.AUTH_PASSWORD_VALIDATORS)
                 )
             except Exception as e:
-                raise serializers.ValidationError("The token entered is not valid. Please check and try again.")
+                raise serializers.ValidationError(e)
         return data
 
 
@@ -231,3 +244,32 @@ class ResetPasswordConfirmSerializer(TokenValidateMixin, serializers.Serializer)
 class ValidateTokenSerializer(TokenValidateMixin, serializers.Serializer):
     token = serializers.CharField()
     uid = serializers.CharField()
+
+
+class ActivateInvitedUserSerializer(serializers.Serializer):
+    uid = serializers.CharField()
+    password = serializers.CharField()
+
+    def validate_uid(self, value):
+        try:
+            user_id = force_text(urlsafe_base64_decode(value))
+            user = User.objects.get(pk=user_id)
+            self.user = user
+        except User.DoesNotExist:
+            raise serializers.ValidationError(detail='The uid entered is not valid')
+
+    def validate_password(self, value):
+        try:
+            validate_password(
+                password=value,
+                user=self.user,
+                password_validators=get_password_validators(settings.AUTH_PASSWORD_VALIDATORS)
+            )
+        except Exception as e:
+            raise serializers.ValidationError(e) 
+
+    def activate(self):
+        password = self.validated_data['password']
+        self.user.is_active=True
+        self.user.set_password(password)
+        self.user.save()    

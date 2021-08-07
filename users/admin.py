@@ -16,7 +16,7 @@ class CustomUserAdmin(UserAdmin, ExportCsvMixin):
     list_filter = ('is_staff', 'is_active', 'email_verified', GroupFilter)
     fieldsets = (
         (None, {'fields': ('email', 'password')}),
-        ('Personal info', {'fields': ('first_name', 'last_name')}),
+        ('Personal info', {'fields': ('first_name', 'last_name', 'accounts')}),
         ('Permissions', {
             'fields': ('is_active', 'is_staff', 'is_superuser', 'groups', 'user_permissions', ),
         }),
