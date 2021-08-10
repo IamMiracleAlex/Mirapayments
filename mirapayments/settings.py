@@ -68,6 +68,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'request.middleware.RequestMiddleware',
+    'logs.middleware.LogMiddleware',
 ]
 
 ROOT_URLCONF = 'mirapayments.urls'

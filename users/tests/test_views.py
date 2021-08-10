@@ -149,9 +149,8 @@ class VerificationEmailTest(APITestCase):
         # try to resend verification email
         invite_url = '/users/send-verification-email/'
         email = resp.data['data']['email']
-        user = User.objects.get(email=email)
-        self.client.force_authenticate(user)
-        resp = self.client.post(invite_url)
+        
+        resp = self.client.post(invite_url, {'email': email})
 
         # assert request is successfull and mail was sent
         self.assertEqual(resp.status_code, status.HTTP_200_OK)

@@ -116,8 +116,8 @@ class UserDetailUpdateView(generics.RetrieveUpdateAPIView):
     GET: /users/me/
     PUT: /users/me/
     """
-    queryset = User.objects.all()
-    serializer_class = serializers.UserSerializer
+    # queryset = User.objects.all()
+    # serializer_class = serializers.UserSerializer
     
     def get(self, request, *args, **kwargs):
         data = serializers.UserSerializer(instance=request.user).data
@@ -147,7 +147,7 @@ class SendVerificationEmail(APIView):
         user = User.objects.filter(email=email)
         if user.exists(): 
             send_verification_email(user.first())
-            return SuccessResponse(detail='Email sent Successfully')
+            return SuccessResponse(detail='Email sent successfully')
 
 
 class VerifyEmail(APIView):
@@ -255,7 +255,7 @@ class ListAccountUsersView(APIView):
         return SuccessResponse(data=data)
 
 
-class ListUsersAccountsView(APIView):
+class ListUserAccountsView(APIView):
     ''''
     List all accounts tied to a user
     GET: /users/me/accounts/
